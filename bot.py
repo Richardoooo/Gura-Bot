@@ -6,6 +6,9 @@ import pymysql
 import time
 import random
 import asyncio
+import glob
+import os
+from urllib.request import urlretrieve
 from graia.scheduler import (
     timers,
 )
@@ -50,7 +53,7 @@ app = GraiaMiraiApplication(
 @bcc.receiver("MemberJoinEvent")
 async def MemberJoin(group: Group,member: Member):
     await app.sendGroupMessage(group, MessageChain.create([
-        At(member.id),Plain(" 欢迎入群!!，我是古拉bot,\n"),At(2365895696),Plain("是我主人!\n")
+        At(member.id),Plain(""" [GuraBot] \-在这里诚挚地欢迎您(大佬)加入!-/,Nya!""")
     ]))
 @bcc.receiver("GroupMessage")
 async def group_message_handler(
@@ -71,6 +74,55 @@ async def group_message_handler(
                 await app.sendGroupMessage(group, MessageChain.create([
                     At(member.id),Plain("无法识别!,用法为: !掷骰子 事件 概率(最少) 概率(最多) \n 如: !掷骰子 我是人 1 100")
                     ]))
+        elif message.asDisplay().startswith("!图片"):
+            command = message.asDisplay().split(" ")
+            if command[1] == "上传":
+                try:
+                    msg_url = message.get(Image)[0].url
+                except Exception as e:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                            Plain('用法错误，正确用法为: !图片 上传 [类别] 图片 \n'),
+                            Plain("如要展示图片，则为: !图片 展示 [类别] ，错误信息:{}".format(e))
+                        ]))
+                    return False
+                try:
+                    if command[3] == "":
+                        pass
+                    if not os.path.exists("./source/{}".format(command[2])):
+                        os.makedirs("./source/{}".format(command[2]))
+                        msg_name = message.get(Image)[0].imageId
+                        print(msg_name)
+                        urlretrieve(msg_url,'./source/{}/{}'.format(command[2],msg_name))
+                        await app.sendGroupMessage(group,MessageChain.create([
+                            Plain("已成功将"),Image.fromLocalFile("./source/{}/{}".format(command[2],msg_name)),Plain("上传到类别{}中！".format[2])
+                            ]))
+                    else:
+                        msg_name = message.get(Image)[0].imageId
+                        urlretrieve(msg_url,'./source/{}/{}'.format(command[2],msg_name))
+                except Exception as e:
+                    print(e)
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain('用法错误，正确用法为: !图片 上传 [类别] 图片 \n'),
+                        Plain("如要展示图片，则为: !图片 展示 [类别] ，错误信息:{}".format(e))
+                    ]))
+            elif command[1] == '展示':
+                if not os.path.exists("./source/{}".format(command[2])):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                    Plain('类别不存在')
+                    ]))
+                try:
+                    img = glob.glob("./source/{}/*".format(command[2]))
+                    print(img)
+                    await app.sendGroupMessage(group, MessageChain.create([
+                    Image.fromLocalFile(random.choice(img))
+                    ]))
+                except Exception as e:
+                    print(e)
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain('用法错误，正确用法为: !图片 上传 [类别] 图片 \n'),
+                        Plain("如要展示图片，则为: !图片 展示 [类别] ，错误信息:{}".format(e))
+                    ]))
+                    return False
         elif message.asDisplay().startswith("!quit"):
             if vari.mode == 0:
                 await app.sendGroupMessage(group, MessageChain.create([
@@ -160,7 +212,7 @@ async def group_message_handler(
                 await app.sendGroupMessage(group, MessageChain.create([
                         Plain("权限不足!")
                         ]))
-        elif message.asDisplay().startswith("!禁言"):
+        elif message.asDisplay().startswith("!拉黑"):
             admin = checkdb(member.id, qqbot_item[4])
             if admin == 1:
                 blist = message.asDisplay().split(" ")
@@ -172,14 +224,19 @@ async def group_message_handler(
                 await app.sendGroupMessage(group, MessageChain.create([
                     At(blist[1]),Plain(' 不理你了!')
                 ]))
+        elif message.asDisplay().startswith("!禁言"):
+            admin = checkdb(member.id, qqbot_item[4])
+            if admin == 1:
+                black = message.asDisplay().split(" ")
+                await app.mute(group,int(black[1]),int(black[2]))
+                await app.sendGroupMessage(group, MessageChain.create([
+                    At(int(black[1])),Plain(" 下次小心点~")
+                    ]))
             else:
                 await app.sendGroupMessage(group, MessageChain.create([
                     Plain("权限不足!")
                     ]))
-        else:
-            await app.sendGroupMessage(group, MessageChain.create([
-                    Plain('没有为{} 的指令！'.format(message.asDisplay()))
-                ]))
+
 
     else:
         if member.id not in blacklist:
@@ -211,7 +268,7 @@ async def group_message_handler(
                     await app.sendGroupMessage(group, MessageChain.create([
                         At(member.id),Plain("早上好啊~"),
                     ]))
-            elif message.asDisplay().startswith("伸手指"):
+            elif message.asDisplay() == "伸手指":
                 await app.sendGroupMessage(group, MessageChain.create([
                     At(member.id),Plain("啊呜！(一口含住)"),
                 ]))
@@ -219,16 +276,20 @@ async def group_message_handler(
                 await app.sendGroupMessage(group, MessageChain.create([
                     Plain("找我主人吗?"),
                 ]))
-            elif message.asSerializationString().find('mirai:at:3062873067') != -1:
+            elif message.asSerializationString().find('[mirai:at:3062873067,]') != -1:
+                print(message.asDisplay())
                 if member.id == 2365895696:
                     await app.sendGroupMessage(group, MessageChain.create([
                         At(member.id),Plain("主人~"),
                     ]))
-                else:
+                elif message.asDisplay() == "@3062873067 ":
                     await app.sendGroupMessage(group, MessageChain.create([
                         Plain("どうも，鯊魚ですNya~"),At(2365895696),Plain("是我主人Nya!\n"),Plain("输入 !help 来获得命令帮助~")
                     ]))
-
+                else:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("如果你要对我下指令，无需使用At.")
+                    ]))
             elif message.asDisplay().startswith("闹钟"):
                 await app.sendGroupMessage(group, MessageChain.create([
                     Voice_LocalFile("/Users/richard/source/audio/guraclock.silk")
@@ -238,8 +299,9 @@ async def group_message_handler(
                     Plain("好康♂的东西: https://www.bilibili.com/video/BV1GJ411x7h7")
                 ]))
             elif message.asDisplay().find("涩图")  != -1 or message.asDisplay().find("色图") != -1:
+                setulist = glob.glob("./source/色图/*")
                 await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("哼,真是的...给你就是了"),Image.fromLocalFile("./source/gura/{}.jpg".format((random.randint(1,27))))
+                    Plain("哼,真是的...给你就是了"),Image.fromLocalFile((random.choice(setulist)))
                 ]))
             elif message.asDisplay().startswith("喵"):
                 await app.sendGroupMessage(group, MessageChain.create([
@@ -449,7 +511,7 @@ async def group_message_handler(
                     await app.sendGroupMessage(group, MessageChain.create([
                             Plain("鲨鲨看你的眼神充满爱意\n"),Plain("当前好感度:{}".format(relation))
                     ]))
-            elif message.asDisplay() == "摸耳朵":
+            elif message.asDisplay().startswith("摸耳朵"):
                 relation = checkdb(member.id,qqbot_item[1])
                 if 100 >= relation >= 0 :
                     await app.sendGroupMessage(group, MessageChain.create([
@@ -544,8 +606,9 @@ async def group_message_handler(
                         At(member.id),Plain(" 晚安~"),
                         ]))
             elif message.asDisplay().find("memes") != -1 or message.asDisplay().find("梗图") != -1:
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Image.fromLocalFile("./source/memes/{}.jpg".format(random.randint(1,10)))
+                memelist = glob.glob("./source/memes/*")
+                await app.sendGroupMessage(group, MessageChain.create([    
+                    Image.fromLocalFile(random.choice(memelist))
                 ]))
             elif message.asDisplay()== "摸肚子":
                 await app.sendGroupMessage(group, MessageChain.create([
