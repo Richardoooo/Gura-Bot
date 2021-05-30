@@ -91,14 +91,20 @@ async def group_message_handler(
                     if not os.path.exists("./source/{}".format(command[2])):
                         os.makedirs("./source/{}".format(command[2]))
                         msg_name = message.get(Image)[0].imageId
-                        print(msg_name)
                         urlretrieve(msg_url,'./source/{}/{}'.format(command[2],msg_name))
+                        time.sleep(0.5)
+                        print("ok.")
                         await app.sendGroupMessage(group,MessageChain.create([
-                            Plain("已成功将"),Image.fromLocalFile("./source/{}/{}".format(command[2],msg_name)),Plain("上传到类别{}中！".format[2])
-                            ]))
+                            Plain("已成功将"),Image.fromLocalFile("./source/{}/{}".format(command[2],msg_name)),Plain("上传到类别{}中！".format(command[2]))
+                        ]))
                     else:
                         msg_name = message.get(Image)[0].imageId
                         urlretrieve(msg_url,'./source/{}/{}'.format(command[2],msg_name))
+                        time.sleep(0.5)
+                        print("ok.")
+                        await app.sendGroupMessage(group,MessageChain.create([
+                            Plain("已成功将"),Image.fromLocalFile("./source/{}/{}".format(command[2],msg_name)),Plain("上传到类别{}中！".format(command[2]))
+                        ]))
                 except Exception as e:
                     print(e)
                     await app.sendGroupMessage(group, MessageChain.create([
@@ -166,7 +172,8 @@ async def group_message_handler(
                 Plain("8.闹钟\n"),
                 Plain("9.鲨片\n"),
                 Plain("10.!掷骰子 事件 概率(最少) 概率(最多)\n"),
-                Plain("11.摸耳朵(Nya~)")
+                Plain("11.摸耳朵\n"),
+                Plain("12.!图片 上传 [类别] 图片 / !图片 展示 [类别]")
             ]))
         elif message.asDisplay().startswith("!猜数字") or message.asDisplay().startswith("！猜数字"):
             if vari.mode == 0:
