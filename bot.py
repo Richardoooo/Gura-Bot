@@ -18,6 +18,7 @@ from graia.broadcast import Broadcast
 from graia.application.entry import *
 from graia.application.message.elements.internal import *
 ########
+os.chdir("/Users/richard/")
 npr.random.seed(0)
 p = npr.array([0.1,0.2, 0.4, 0.15, 0.1, 0.05])
 lottery = [0,50,100,150,200,250]
@@ -64,8 +65,22 @@ async def group_message_handler(
     message: MessageChain,
     app: GraiaMiraiApplication,
     group: Group,member: Member):
+
+    ###log###
+
+    now_time = time.asctime( time.localtime(time.time()))
+    log = open("./bots/log.log","a")
+    logs = str(now_time)+" "+str(group.name)+"("+str(group.id)+")"+":"+str(member.name)+"("+str(member.id)+'):'+message.asDisplay()
+    log.write(str(logs)+"\n")
+    log.close()
+
+    ###blacklist###
+
+
     with open("/Users/richard/blacklist.json","r") as f:
         blacklist = json.load(f)
+
+
     if message.asDisplay().startswith("!") and member.id not in blacklist:
         if message.asDisplay().startswith("!掷骰子") or message.asDisplay().startswith("！掷骰子"):
             try:
@@ -291,6 +306,22 @@ async def group_message_handler(
                     await app.sendGroupMessage(group, MessageChain.create([
                         Image.fromLocalFile("./source/memes/5.jpg")
                     ]))
+            elif message.asDisplay().startswith("草"):
+                grass_time = 0
+                for i in message.asDisplay():
+                    if i == "草":
+                        grass_time += 1
+                    else:
+                        break
+                await app.sendGroupMessage(group, MessageChain.create([
+                    Plain("草"*grass_time)
+                    ]))
+            elif message.asDisplay().find("😅") != -1:
+                relation = checkdb(member.id,qqbot_item[1])
+                updatedb(member.id, qqbot_item[1],relation-5)
+                await app.sendGroupMessage(group, MessageChain.create([
+                    At(member.id),Plain("不要发流汗黄豆啊....\n"),Plain("好感度-5"),
+                ]))
             elif message.asDisplay().startswith("早"):
                 times = int(time.strftime("%H", time.localtime()))
                 if times >= 12 and times <= 17:
