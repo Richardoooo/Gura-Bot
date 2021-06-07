@@ -9,6 +9,7 @@ import asyncio
 import glob
 import os
 from urllib.request import urlretrieve
+import numpy as npr
 from graia.scheduler import (
     timers,
 )
@@ -17,6 +18,9 @@ from graia.broadcast import Broadcast
 from graia.application.entry import *
 from graia.application.message.elements.internal import *
 ########
+npr.random.seed(0)
+p = npr.array([0.1,0.2, 0.4, 0.15, 0.1, 0.05])
+lottery = [0,50,100,150,200,250]
 qqbot_item = ['QQid', 'good' ,'times', 'pull', 'admin','sign_in','game_1']
 class variables:
     mode = 0
@@ -129,6 +133,36 @@ async def group_message_handler(
                         Plain("如要展示图片，则为: !图片 展示 [类别] ，错误信息:{}".format(e))
                     ]))
                     return False
+        # elif message.asDisplay().startswith("!抽奖"):
+        #     add_point = 0
+        #     final_point = 0
+        #     command = message.asDisplay().split(" ")
+        #     try:
+        #         times = int(command[1])
+        #     except Exception as e:
+        #         print(e)
+        #         await app.sendGroupMessage(group, MessageChain.create([
+        #             Plain('用法错误.正确抽奖方法为:!抽奖 [次数] ,一次减少100好感度,抽奖随机增加50-150好感度')
+        #         ]))
+        #     if times <= 0:
+        #         await app.sendGroupMessage(group, MessageChain.create([
+        #             Plain('抽奖次数不能小于或等于0!')
+        #         ]))
+        #     else:
+        #         relation = checkdb(member.id,qqbot_item[1])
+        #         if times * 100 > relation :
+        #             await app.sendGroupMessage(group, MessageChain.create([
+        #             Plain('最多抽奖次数不能大于你现在的好感度!')
+        #             ]))
+        #         else:
+        #             relation = checkdb(member.id,qqbot_item[1])
+        #             time.sleep(0.3)
+        #             for i in range(times):
+        #                 final_point += npr.random.choice(lottery,p=p.ravel())
+        #             updatedb(member.id, qqbot_item[1],relation+final_point-times*100)
+        #             await app.sendGroupMessage(group, MessageChain.create([
+        #             Plain('抽奖完毕，一共抽了{}次，加了{}好感度,扣除{}好感度'.format(times,final_point,times*100))
+        #             ]))
         elif message.asDisplay().startswith("!quit"):
             if vari.mode == 0:
                 await app.sendGroupMessage(group, MessageChain.create([
@@ -305,7 +339,7 @@ async def group_message_handler(
                 await app.sendGroupMessage(group, MessageChain.create([
                     Plain("好康♂的东西: https://www.bilibili.com/video/BV1GJ411x7h7")
                 ]))
-            elif message.asDisplay().find("涩图")  != -1 or message.asDisplay().find("色图") != -1:
+            elif message.asDisplay().startswith("涩图") or message.asDisplay().startswith("色图"):
                 setulist = glob.glob("./source/色图/*")
                 await app.sendGroupMessage(group, MessageChain.create([
                     Plain("哼,真是的...给你就是了"),Image.fromLocalFile((random.choice(setulist)))
@@ -357,17 +391,29 @@ async def group_message_handler(
                                     Plain("好耶~！")
                                 ]))
                                 pass
-                        elif 100 >= relation >= 0:
+                        elif 1000 >= relation >= 500:
                             if checkdb(member.id, qqbot_item[3]) == 0:
-                                updatedb(member.id, qqbot_item[1],relation+5)
+                                updatedb(member.id, qqbot_item[1],relation+6)
                                 updatedb(member.id, qqbot_item[3], 1)
                                 await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("谢谢~\n"),Plain("好感度+2")
+                                    Plain("\n"),Plain("好感度+6")
                                 ]))
                                 pass
                             else:
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("谢谢~")
+                                ]))
+                        elif 100 >= relation >= 0:
+                            if checkdb(member.id, qqbot_item[3]) == 0:
+                                updatedb(member.id, qqbot_item[1],relation+2)
+                                updatedb(member.id, qqbot_item[3], 1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("嗯，我相信你哦\n"),Plain("好感度+2")
+                                ]))
+                                pass
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("嗯，我相信你哦")
                                 ]))
                                 pass
                         elif relation >= 2000:
@@ -496,7 +542,7 @@ async def group_message_handler(
                 await app.sendGroupMessage(group, MessageChain.create([
                     Plain("*你摸了摸鲨鲨的头发，软软的，还有股香味(海草味?)\n"),Plain("好舒服...")
                 ]))
-            elif message.asDisplay().startswith("好感度"):
+            elif message.asDisplay()== "好感度":
                 relation = checkdb(member.id,qqbot_item[1])
                 if 100 >= relation >= 0 :
                     await app.sendGroupMessage(group, MessageChain.create([
@@ -681,4 +727,5 @@ async def group_message_handler(
                 pass
 
 ###开始运行###
-app.launch_blocking()
+if __name__ == "__main__":
+    app.launch_blocking()
