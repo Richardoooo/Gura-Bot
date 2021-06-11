@@ -17,11 +17,14 @@ import graia.scheduler as scheduler
 from graia.broadcast import Broadcast
 from graia.application.entry import *
 from graia.application.message.elements.internal import *
-########
+
+###变量####
+
 os.chdir("/Users/richard/")
 npr.random.seed(0)
 p = npr.array([0.1,0.2, 0.4, 0.15, 0.1, 0.05])
 lottery = [0,50,100,150,200,250]
+group_black_list = [915889573,]
 qqbot_item = ['QQid', 'good' ,'times', 'pull', 'admin','sign_in','game_1']
 class variables:
     mode = 0
@@ -42,7 +45,8 @@ app = GraiaMiraiApplication(
         websocket=True # Graia 已经可以根据所配置的消息接收的方式来保证消息接收部分的正常运作.
     )
 )
-###东西###
+
+###本体###
 
 # sche = scheduler.GraiaScheduler(loop=loop,broadcast=bcc)
 
@@ -80,6 +84,7 @@ async def group_message_handler(
     with open("/Users/richard/blacklist.json","r") as f:
         blacklist = json.load(f)
 
+    ###指令###
 
     if message.asDisplay().startswith("!") and member.id not in blacklist:
         if message.asDisplay().startswith("!掷骰子") or message.asDisplay().startswith("！掷骰子"):
@@ -293,470 +298,496 @@ async def group_message_handler(
                     Plain("权限不足!")
                     ]))
 
-
+    ###触发词###
     else:
-        if member.id not in blacklist:
-            if message.asDisplay().find("gura") != -1 or message.asDisplay() == ("A") or message.asDisplay().find("nya") != -1 or message.asSerializationString().find('mirai:atall') != -1 :
-                choose = random.randint(0,1)
-                if choose == 1:  
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("Nya！"),
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Image.fromLocalFile("./source/memes/5.jpg")
-                    ]))
-            elif message.asDisplay().startswith("草"):
-                grass_time = 0
-                for i in message.asDisplay():
-                    if i == "草":
-                        grass_time += 1
-                    else:
-                        break
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("草"*grass_time)
-                    ]))
-            elif message.asDisplay().find("😅") != -1:
-                relation = checkdb(member.id,qqbot_item[1])
-                updatedb(member.id, qqbot_item[1],relation-5)
-                await app.sendGroupMessage(group, MessageChain.create([
-                    At(member.id),Plain("不要发流汗黄豆啊....\n"),Plain("好感度-5"),
-                ]))
-            elif message.asDisplay().startswith("早"):
-                times = int(time.strftime("%H", time.localtime()))
-                if times >= 12 and times <= 17:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain("笨蛋,都中午啦"),
+        if group.id not in group_black_list:
+            if member.id not in blacklist:
+                if message.asDisplay().find("gura") != -1 or message.asDisplay() == ("A") or message.asDisplay().find("nya") != -1 or message.asSerializationString().find('mirai:atall') != -1 :
+                    choose = random.randint(0,1)
+                    if choose == 1:  
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("Nya！"),
                         ]))
-                elif times >= 5 :
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain("已经午夜了..."),
-                    ]))
-                elif times >= 17 and times <= 24:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain("都已经晚上了..."),
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain("早上好啊~"),
-                    ]))
-            elif message.asDisplay() == "伸手指":
-                await app.sendGroupMessage(group, MessageChain.create([
-                    At(member.id),Plain("啊呜！(一口含住)"),
-                ]))
-            elif message.asDisplay().find('[mirai:at:2365895696]') != -1:
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("找我主人吗?"),
-                ]))
-            elif message.asSerializationString().find('[mirai:at:3062873067,]') != -1:
-                print(message.asDisplay())
-                if member.id == 2365895696:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain("主人~"),
-                    ]))
-                elif message.asDisplay() == "@3062873067 ":
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("どうも，鯊魚ですNya~"),At(2365895696),Plain("是我主人Nya!\n"),Plain("输入 !help 来获得命令帮助~")
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("如果你要对我下指令，无需使用At.")
-                    ]))
-            elif message.asDisplay().startswith("闹钟"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Voice_LocalFile("/Users/richard/source/audio/guraclock.silk")
-                ]))
-            elif message.asDisplay().startswith("鲨片"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("好康♂的东西: https://www.bilibili.com/video/BV1GJ411x7h7")
-                ]))
-            elif message.asDisplay().startswith("涩图") or message.asDisplay().startswith("色图"):
-                setulist = glob.glob("./source/色图/*")
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("哼,真是的...给你就是了"),Image.fromLocalFile((random.choice(setulist)))
-                ]))
-            elif message.asDisplay().startswith("喵"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("Nya!"),Image.fromLocalFile("./source/表情包/mua.jpg")
-                ]))
-            elif message.asDisplay().startswith("啊这") or message.asDisplay().startswith("az"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Image.fromLocalFile("/Users/richard/source/表情包/河里.png")
-                ]))
-            elif message.asDisplay().find('音游') != -1:
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain('音游我可擅长了！'),Image.fromLocalFile("./source/表情包/音游鲨.gif")
-                ]))
-            elif message.asDisplay().find('好耶') != -1:
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain('好耶~')
-                ]))
-            elif message.asDisplay().startswith('我永远单推'):
-                if message.asDisplay().startswith('我永远单推鲨鲨') or message.asDisplay().startswith('我永远单推古拉') or message.asDisplay().startswith('我永远单推高古拉'):
-                    relation = checkdb(member.id,qqbot_item[1])
-                    count = checkdb(member.id, qqbot_item[3])
-                    if member.id == 2365895696:
-                        if checkdb(member.id, qqbot_item[3]) == 0:
-                            updatedb(member.id, qqbot_item[1],relation+10)
-                            updatedb(member.id, qqbot_item[3], 1)
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("主人最棒了~\n"),Plain("好感度+10")
-                            ]))
-                            pass
-                        else:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("主人最棒了~")
-                            ]))
-                            pass
                     else:
-                        if 500 >= relation >= 100:
-                            if checkdb(member.id, qqbot_item[3]) == 0 :
-                                updatedb(member.id, qqbot_item[1],relation+5)
-                                updatedb(member.id, qqbot_item[3], 1)
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("好耶~！\n"),Plain("好感度+5")
-                                ]))
-                                pass
-                            else:
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("好耶~！")
-                                ]))
-                                pass
-                        elif 1000 >= relation >= 500:
-                            if checkdb(member.id, qqbot_item[3]) == 0:
-                                updatedb(member.id, qqbot_item[1],relation+6)
-                                updatedb(member.id, qqbot_item[3], 1)
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("\n"),Plain("好感度+6")
-                                ]))
-                                pass
-                            else:
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("谢谢~")
-                                ]))
-                        elif 100 >= relation >= 0:
-                            if checkdb(member.id, qqbot_item[3]) == 0:
-                                updatedb(member.id, qqbot_item[1],relation+2)
-                                updatedb(member.id, qqbot_item[3], 1)
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("嗯，我相信你哦\n"),Plain("好感度+2")
-                                ]))
-                                pass
-                            else:
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("嗯，我相信你哦")
-                                ]))
-                                pass
-                        elif relation >= 2000:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Image.fromLocalFile("./source/memes/5.jpg")
+                        ]))
+                elif message.asDisplay().startswith("草"):
+                    grass_time = 0
+                    for i in message.asDisplay():
+                        if i == "草":
+                            grass_time += 1
+                        else:
+                            break
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("草"*grass_time)
+                        ]))
+                elif message.asDisplay().find("😅") != -1:
+                    relation = checkdb(member.id,qqbot_item[1])
+                    updatedb(member.id, qqbot_item[1],relation-5)
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        At(member.id),Plain("不要发流汗黄豆啊....\n"),Plain("好感度-5"),
+                    ]))
+                elif message.asDisplay().startswith("早"):
+                    times = int(time.strftime("%H", time.localtime()))
+                    if times >= 12 and times <= 17:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain("笨蛋,都中午啦"),
+                            ]))
+                    elif times >= 5 :
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain("已经午夜了..."),
+                        ]))
+                    elif times >= 17 and times <= 24:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain("都已经晚上了..."),
+                        ]))
+                    else:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain("早上好啊~"),
+                        ]))
+                elif message.asDisplay() == "伸手指":
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        At(member.id),Plain("啊呜！(一口含住)"),
+                    ]))
+                elif message.asDisplay().find('[mirai:at:2365895696]') != -1:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("找我主人吗?"),
+                    ]))
+                elif message.asSerializationString().find('[mirai:at:3062873067,]') != -1:
+                    print(message.asDisplay())
+                    if member.id == 2365895696:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain("主人~"),
+                        ]))
+                    elif message.asDisplay() == "@3062873067 ":
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("どうも，鯊魚ですNya~"),At(2365895696),Plain("是我主人Nya!\n"),Plain("输入 !help 来获得命令帮助~")
+                        ]))
+                    else:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("如果你要对我下指令，无需使用At.")
+                        ]))
+                elif message.asDisplay().startswith("闹钟"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Voice_LocalFile("/Users/richard/source/audio/guraclock.silk")
+                    ]))
+                elif message.asDisplay().startswith("鲨片"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("好康♂的东西: https://www.bilibili.com/video/BV1GJ411x7h7")
+                    ]))
+                elif message.asDisplay().startswith("涩图") or message.asDisplay().startswith("色图"):
+                    setulist = glob.glob("./source/色图/*")
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("哼,真是的...给你就是了"),Image.fromLocalFile((random.choice(setulist)))
+                    ]))
+                elif message.asDisplay().startswith("喵"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("Nya!"),Image.fromLocalFile("./source/表情包/mua.jpg")
+                    ]))
+                elif message.asDisplay().startswith("啊这") or message.asDisplay().startswith("az"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Image.fromLocalFile("/Users/richard/source/表情包/河里.png")
+                    ]))
+                elif message.asDisplay().find('音游') != -1:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain('音游我可擅长了！'),Image.fromLocalFile("./source/表情包/音游鲨.gif")
+                    ]))
+                elif message.asDisplay().find('好耶') != -1:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain('好耶~')
+                    ]))
+                elif message.asDisplay().startswith('我永远单推'):
+                    if message.asDisplay().startswith('我永远单推鲨鲨') or message.asDisplay().startswith('我永远单推古拉') or message.asDisplay().startswith('我永远单推高古拉'):
+                        relation = checkdb(member.id,qqbot_item[1])
+                        count = checkdb(member.id, qqbot_item[3])
+                        if member.id == 2365895696:
                             if checkdb(member.id, qqbot_item[3]) == 0:
                                 updatedb(member.id, qqbot_item[1],relation+10)
                                 updatedb(member.id, qqbot_item[3], 1)
                                 await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("啾~\n"),Plain('好感度+10')
+                                    Plain("主人最棒了~\n"),Plain("好感度+10")
                                 ]))
                                 pass
                             else:
                                 await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("啾~")
+                                    Plain("主人最棒了~")
                                 ]))
                                 pass
-                        elif 2000 >= relation >= 1000:
-                            if checkdb(member.id, qqbot_item[3]) == 0:
-                                updatedb(member.id, qqbot_item[1],relation+8)
-                                updatedb(member.id, qqbot_item[3], 1)
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("我爱你~\n"),Plain("好感度+8")
-                                ]))
-                                pass
-                            else:
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain("我爱你~")
-                                ]))
-                                pass
-                elif message.asDisplay() == '我永远单推' or message.asDisplay() == '我永远单推（）' or message.asDisplay() == '我永远单推 ' or message.asDisplay() == '我永远单推()':
-                    await app.sendGroupMessage(group,MessageChain.create([
-                        Plain('你要单推谁？我吗?(期待.jpg)')
-                    ]))
-                else:
-                    if member.id == 2365895696:
+                        else:
+                            if 500 >= relation >= 100:
+                                if checkdb(member.id, qqbot_item[3]) == 0 :
+                                    updatedb(member.id, qqbot_item[1],relation+5)
+                                    updatedb(member.id, qqbot_item[3], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("好耶~！\n"),Plain("好感度+5")
+                                    ]))
+                                    pass
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("好耶~！")
+                                    ]))
+                                    pass
+                            elif 1000 >= relation >= 500:
+                                if checkdb(member.id, qqbot_item[3]) == 0:
+                                    updatedb(member.id, qqbot_item[1],relation+6)
+                                    updatedb(member.id, qqbot_item[3], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("\n"),Plain("好感度+6")
+                                    ]))
+                                    pass
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("谢谢~")
+                                    ]))
+                            elif 100 >= relation >= 0:
+                                if checkdb(member.id, qqbot_item[3]) == 0:
+                                    updatedb(member.id, qqbot_item[1],relation+2)
+                                    updatedb(member.id, qqbot_item[3], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("嗯，我相信你哦\n"),Plain("好感度+2")
+                                    ]))
+                                    pass
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("嗯，我相信你哦")
+                                    ]))
+                                    pass
+                            elif relation >= 2000:
+                                if checkdb(member.id, qqbot_item[3]) == 0:
+                                    updatedb(member.id, qqbot_item[1],relation+10)
+                                    updatedb(member.id, qqbot_item[3], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("啾~\n"),Plain('好感度+10')
+                                    ]))
+                                    pass
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("啾~")
+                                    ]))
+                                    pass
+                            elif 4000 >= relation >= 1000:
+                                if checkdb(member.id, qqbot_item[3]) == 0:
+                                    updatedb(member.id, qqbot_item[1],relation+8)
+                                    updatedb(member.id, qqbot_item[3], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("我爱你~\n"),Plain("好感度+8")
+                                    ]))
+                                    pass
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("我爱你~")
+                                    ]))
+                                    pass
+                            elif relation > 4000:
+                                if checkdb(member.id, qqbot_item[3]) == 0:
+                                    updatedb(member.id, qqbot_item[1],relation+10)
+                                    updatedb(member.id, qqbot_item[3], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("你最棒了!\n"),Plain("好感度+10")
+                                    ]))
+                                    pass
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("你最棒了！")
+                                    ]))
+                                    pass
+                    elif message.asDisplay() == '我永远单推' or message.asDisplay() == '我永远单推（）' or message.asDisplay() == '我永远单推 ' or message.asDisplay() == '我永远单推()':
                         await app.sendGroupMessage(group,MessageChain.create([
-                            Plain('主人不要我了吗??!!')
+                            Plain('你要单推谁？我吗?(期待.jpg)')
                         ]))
                     else:
-                        await app.sendGroupMessage(group,MessageChain.create([
-                            Plain('啊...你不要我了吗..呜呜呜')
-                        ]))
-        ###LET
-        ###THE
-        ###BASS
-        ###KICK
-        ###O-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee-ee-eee 
-        ###AAAAE-A-E-I-E-A- JO-ooo-oo-oo-oo EEEEO-A-AAA-AAAA
-            elif message.asDisplay().find('脑力') != -1:
-                await app.sendGroupMessage(group,MessageChain.create([
-                    Plain("LET THE BASS KICK"),
-                ]))
-                time.sleep(1.5),
-                await app.sendGroupMessage(group,MessageChain.create([
-                    Plain('O-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee')
-                ]))
-            elif message.asDisplay().startswith("摸尾巴"):
-                relation = checkdb(member.id,qqbot_item[1])
-                count = checkdb(member.id, qqbot_item[2])
-                if member.id == 2365895696:
-                    if checkdb(member.id,qqbot_item[2]) < 7:
-                        updatedb(member.id, qqbot_item[1],relation+10)
-                        updatedb(member.id, qqbot_item[2], count + 1)
-                        await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("主人轻点~\n"),Plain("好感度+10")
-                        ]))
+                        if member.id == 2365895696:
+                            await app.sendGroupMessage(group,MessageChain.create([
+                                Plain('主人不要我了吗??!!')
+                            ]))
+                        else:
+                            await app.sendGroupMessage(group,MessageChain.create([
+                                Plain('啊...你不要我了吗..呜呜呜')
+                            ]))
+            ###LET
+            ###THE
+            ###BASS
+            ###KICK
+            ###O-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee-ee-eee 
+            ###AAAAE-A-E-I-E-A- JO-ooo-oo-oo-oo EEEEO-A-AAA-AAAA
+                elif message.asDisplay().find('脑力') != -1:
+                    await app.sendGroupMessage(group,MessageChain.create([
+                        Plain("LET THE BASS KICK"),
+                    ]))
+                    time.sleep(1.5),
+                    await app.sendGroupMessage(group,MessageChain.create([
+                        Plain('O-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee')
+                    ]))
+                elif message.asDisplay().startswith("摸尾巴"):
+                    relation = checkdb(member.id,qqbot_item[1])
+                    count = checkdb(member.id, qqbot_item[2])
+                    if member.id == 2365895696:
+                        if checkdb(member.id,qqbot_item[2]) < 7:
+                            updatedb(member.id, qqbot_item[1],relation+10)
+                            updatedb(member.id, qqbot_item[2], count + 1)
+                            await app.sendGroupMessage(group, MessageChain.create([
+                                Plain("主人轻点~\n"),Plain("好感度+10")
+                            ]))
+                            pass
+                        else:
+                            await app.sendGroupMessage(group, MessageChain.create([
+                                Plain("主人轻点~")
+                            ]))
                         pass
                     else:
+                        if 400 >= relation > 100:
+                            if count < 7:
+                                updatedb(member.id, qqbot_item[1],relation+3)
+                                updatedb(member.id, qqbot_item[2], count+1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("只能摸一下哦...\n"),Plain("好感度+3")
+                                ]))
+                                pass
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("只能摸一下哦...")
+                                ]))
+                                pass
+                        elif 100 >= relation >= 0:
+                            if count < 7:
+                                updatedb(member.id, qqbot_item[1],relation+1)
+                                updatedb(member.id, qqbot_item[2], count+1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("鲨鲨躲开了\n"),Plain("但好感度+1")
+                                ]))
+                                pass
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("鲨鲨躲开了")
+                                ]))
+                                pass
+                        elif 1000 >= relation > 400:
+                            if count < 7:
+                                updatedb(member.id, qqbot_item[1],relation+4)
+                                updatedb(member.id, qqbot_item[2], count+1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("别摸啦，好痒的~\n"),Plain('好感度+4')
+                                ]))
+                                pass
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("别摸啦，好痒的~")
+                                ]))
+                                pass
+                        elif 4000 >= relation > 1000:
+                            if count < 7:
+                                updatedb(member.id, qqbot_item[1],relation+10)
+                                updatedb(member.id, qqbot_item[2], count+1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("啊~好舒服~\n"),Plain('好感度+10')
+                                ]))
+                                pass
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("啊~好舒服~")
+                                ]))
+                                pass
+                        elif relation > 4000:
+                            if count < 7:
+                                updatedb(member.id, qqbot_item[1],relation+15)
+                                updatedb(member.id, qqbot_item[2], count+1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("再来一下...(脸红)\n"),Plain('好感度+10')
+                                ]))
+                                pass
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("再来一下...(脸红)")
+                                ]))
+                                pass
+                elif message.asDisplay().startswith("摸头"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("*你摸了摸鲨鲨的头发，软软的，还有股香味(海草味?)\n"),Plain("好舒服...")
+                    ]))
+                elif message.asDisplay()== "好感度":
+                    relation = checkdb(member.id,qqbot_item[1])
+                    if 100 >= relation >= 0 :
                         await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("主人轻点~")
+                                Plain("鲨鲨觉得你是个陌生人\n"),Plain("当前好感度:{}".format(relation))
                         ]))
-                    pass
-                else:
-                    if 400 >= relation >= 100:
-                        if count < 7:
-                            updatedb(member.id, qqbot_item[1],relation+3)
-                            updatedb(member.id, qqbot_item[2], count+1)
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("只能摸一下哦...\n"),Plain("好感度+3")
-                            ]))
-                            pass
-                        else:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("只能摸一下哦...")
-                            ]))
-                            pass
-                    elif 100 >= relation >= 0:
-                        if count < 7:
-                            updatedb(member.id, qqbot_item[1],relation+1)
-                            updatedb(member.id, qqbot_item[2], count+1)
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("鲨鲨躲开了\n"),Plain("但好感度+1")
-                            ]))
-                            pass
-                        else:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("鲨鲨躲开了")
-                            ]))
-                            pass
+                    elif 400 >= relation >= 100:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                                Plain("鲨鲨跟你比较熟\n"),Plain("当前好感度:{}".format(relation))
+                        ]))
                     elif 1000 >= relation >= 400:
-                        if count < 7:
-                            updatedb(member.id, qqbot_item[1],relation+4)
-                            updatedb(member.id, qqbot_item[2], count+1)
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("别摸啦，好痒的~\n"),Plain('好感度+4')
-                            ]))
-                            pass
-                        else:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("别摸啦，好痒的~")
-                            ]))
-                            pass
-                    elif 5000 >= relation >= 1000:
-                        if count < 7:
-                            updatedb(member.id, qqbot_item[1],relation+10)
-                            updatedb(member.id, qqbot_item[2], count+1)
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("啊~好舒服~\n"),Plain('好感度+10')
-                            ]))
-                            pass
-                        else:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain("啊~好舒服~")
-                            ]))
-                            pass
-            elif message.asDisplay().startswith("摸头"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("*你摸了摸鲨鲨的头发，软软的，还有股香味(海草味?)\n"),Plain("好舒服...")
-                ]))
-            elif message.asDisplay()== "好感度":
-                relation = checkdb(member.id,qqbot_item[1])
-                if 100 >= relation >= 0 :
-                    await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("鲨鲨觉得你是个陌生人\n"),Plain("当前好感度:{}".format(relation))
-                    ]))
-                elif 400 >= relation >= 100:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("鲨鲨跟你比较熟\n"),Plain("当前好感度:{}".format(relation))
-                    ]))
-                elif 1000 >= relation >= 400:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("鲨鲨和你是好朋友\n"),Plain("当前好感度:{}".format(relation))
-                    ]))
-                elif 2500 >= relation >= 1000:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("鲨鲨只要和你在一起就很开心\n"),Plain("当前好感度:{}".format(relation))
-                    ]))
-                elif relation > 2500:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                            Plain("鲨鲨看你的眼神充满爱意\n"),Plain("当前好感度:{}".format(relation))
-                    ]))
-            elif message.asDisplay().startswith("摸耳朵"):
-                relation = checkdb(member.id,qqbot_item[1])
-                if 100 >= relation >= 0 :
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("耳朵不要乱摸啦！")
-                    ]))
-                elif 400 >= relation >= 100:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("就算你是我朋友我也不会让你摸的..")
-                    ]))
-                elif 1000 >= relation >= 400:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("最多一下哦..")
-                    ]))
-                elif 2500 >= relation >= 1000:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("啊..好痒..")
-                    ]))
-                elif relation >= 2500:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("Nya~啊呜..饶了我吧..耳朵一直摸下去会很敏感的..")
-                    ]))
-            elif message.asDisplay().startswith('sudo shark-reset'):
-                admin = checkdb(member.id, qqbot_item[4])
-                if admin == 1:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain(reset())
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("权限不足")
-                    ]))
-            elif message.asDisplay() == 'sudo mysql --all':
-                admin = checkdb(member.id, qqbot_item[4])
-                if admin == 1:
-                    conn = pymysql.connect(host='localhost',user='root',password='richard5296867',db="qqmember",charset='utf8mb4')
-                    cur = conn.cursor()
-                    cur.execute('SELECT * FROM qqbot')
-                    result = cur.fetchall()
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain(str(result))
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("权限不足")
-                    ]))
-            elif message.asDisplay().startswith('小色鲨'):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("才不是呢~!")
-                ]))
-            elif message.asDisplay().startswith('猫鲨'):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    At(member.id),Plain("Nyaaaaaaa!")
-                ]))
-            elif message.asDisplay().startswith('签到'):
-                relation = checkdb(member.id,qqbot_item[1])
-                sign_in_times = checkdb(member.id,qqbot_item[5])
-                if sign_in_times == 0:
-                    point = random.randint(1,10)
-                    updatedb(member.id,qqbot_item[1],relation+point)
-                    updatedb(member.id,qqbot_item[5],1)
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("签到成功！\n"),Plain('好感度+{}'.format(point))
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("今天已经签到过了哦~")
-                    ]))
-            elif message.asDisplay().startswith('摸下排牙'):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("*你什么也没摸到，除了一手口水，真好喝")
-                ]))
-            elif message.asDisplay().find("BUG") != -1 or message.asDisplay().find("bug") != -1 or message.asDisplay().find("Bug") != -1:
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("1 bug fixed, 255 bug increased")
-                ]))
-            elif message.asDisplay().startswith("晚安"):
-                times = int(time.strftime("%H", time.localtime()))
-                if times >= 12 and times <= 17:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain(" 才中午.."),
-                        ]))
-                elif times >= 5 :
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain(" 晚安,快去睡觉！"),
-                    ]))
-                elif times >= 5 and times <= 12:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain(" 都已经早上了..."),
-                    ]))
-                else:
-                    await app.sendGroupMessage(group, MessageChain.create([
-                        At(member.id),Plain(" 晚安~"),
-                        ]))
-            elif message.asDisplay().find("memes") != -1 or message.asDisplay().find("梗图") != -1:
-                memelist = glob.glob("./source/memes/*")
-                await app.sendGroupMessage(group, MessageChain.create([    
-                    Image.fromLocalFile(random.choice(memelist))
-                ]))
-            elif message.asDisplay()== "摸肚子":
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("肚子不能摸啦...")
-                ]))
-            elif message.asDisplay().startswith("摸屁股"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain("hentai!(拍开)")
-                ]))
-            elif message.asDisplay().startswith("冲还是不冲?"):
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain(random.choice(['冲!!!', '不冲,注意身体(鲨鲨笑)']))
-                ]))
-            ###小游戏###
-            if vari.mode == 1:
-                try:
-                    msg = int(message.asDisplay())
-                    if member.id == vari.memberid and 1 <= msg <= 100 and vari.i != 5 and msg != vari.num:
-                        vari.i += 1
-                        if msg < vari.num:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain('你输入的数字太小了，还有' + str(vari.guess_chances - vari.i)+'次机会，请重新输入：')
-                            ]))
-                        elif msg > vari.num:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain('你输入的数字太大了，还有' + str(vari.guess_chances - vari.i)+'次机会，请重新输入：')
-                            ]))
-                    elif msg == vari.num and member.id == vari.memberid and vari.i <= 5:
-                        if checkdb(member.id, qqbot_item[6]) != 1:
-                            relation = checkdb(member.id,qqbot_item[1])
-                            updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
-                            updatedb(member.id, qqbot_item[6], 1)
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain('猜对了!\n'),Plain('好感度+{}'.format(10*(vari.guess_chances - vari.i -1)+10))
-                            ]))
-                            vari.mode = 0
-                            vari.memberid = 0
-                            vari.i = 0
-                            vari.guess_chances = 6
-                            vari.num = 0
-                        else:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain('猜对了!')
-                            ]))
-                            vari.mode = 0
-                            vari.memberid = 0
-                            vari.i = 0
-                            vari.guess_chances = 6
-                            vari.num = 0
-                    elif member.id == vari.memberid and vari.i == 5 and msg != vari.num:
                         await app.sendGroupMessage(group, MessageChain.create([
-                            Plain('你没猜到...看来得多练习呢!\n'),Plain("数字是:{}".format(vari.num))
+                                Plain("鲨鲨和你是好朋友\n"),Plain("当前好感度:{}".format(relation))
                         ]))
-                        vari.mode = 0
-                        vari.memberid = 0
-                        vari.i = 0
-                        vari.guess_chances = 6
-                        vari.num = 0
-                    
-                except Exception as e:
+                    elif 2500 >= relation >= 1000:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                                Plain("鲨鲨只要和你在一起就很开心\n"),Plain("当前好感度:{}".format(relation))
+                        ]))
+                    elif relation > 2500:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                                Plain("鲨鲨看你的眼神充满爱意\n"),Plain("当前好感度:{}".format(relation))
+                        ]))
+                elif message.asDisplay().startswith("摸耳朵"):
+                    relation = checkdb(member.id,qqbot_item[1])
+                    if 100 >= relation >= 0 :
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("耳朵不要乱摸啦！")
+                        ]))
+                    elif 400 >= relation >= 100:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("就算你是我朋友我也不会让你摸的..")
+                        ]))
+                    elif 1000 >= relation >= 400:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("最多一下哦..")
+                        ]))
+                    elif 2500 >= relation >= 1000:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("啊..好痒..")
+                        ]))
+                    elif relation >= 2500:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("Nya~啊呜..饶了我吧..耳朵一直摸下去会很敏感的..")
+                        ]))
+                elif message.asDisplay().startswith('sudo shark-reset'):
+                    admin = checkdb(member.id, qqbot_item[4])
+                    if admin == 1:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain(reset())
+                        ]))
+                    else:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("权限不足")
+                        ]))
+                elif message.asDisplay() == 'sudo mysql --all':
+                    admin = checkdb(member.id, qqbot_item[4])
+                    if admin == 1:
+                        conn = pymysql.connect(host='localhost',user='root',password='richard5296867',db="qqmember",charset='utf8mb4')
+                        cur = conn.cursor()
+                        cur.execute('SELECT * FROM qqbot')
+                        result = cur.fetchall()
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain(str(result))
+                        ]))
+                    else:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("权限不足")
+                        ]))
+                elif message.asDisplay().startswith('小色鲨'):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("才不是呢~!")
+                    ]))
+                elif message.asDisplay().startswith('猫鲨'):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        At(member.id),Plain("Nyaaaaaaa!")
+                    ]))
+                elif message.asDisplay().startswith('签到'):
+                    relation = checkdb(member.id,qqbot_item[1])
+                    sign_in_times = checkdb(member.id,qqbot_item[5])
+                    if sign_in_times == 0:
+                        point = random.randint(1,10)
+                        updatedb(member.id,qqbot_item[1],relation+point)
+                        updatedb(member.id,qqbot_item[5],1)
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("签到成功！\n"),Plain('好感度+{}'.format(point))
+                        ]))
+                    else:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("今天已经签到过了哦~")
+                        ]))
+                elif message.asDisplay().startswith('摸下排牙'):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("*你什么也没摸到，除了一手口水，真好喝")
+                    ]))
+                elif message.asDisplay().find("BUG") != -1 or message.asDisplay().find("bug") != -1 or message.asDisplay().find("Bug") != -1:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("1 bug fixed, 255 bug added")
+                    ]))
+                elif message.asDisplay().startswith("晚安"):
+                    times = int(time.strftime("%H", time.localtime()))
+                    if times >= 12 and times <= 17:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain(" 才中午.."),
+                            ]))
+                    elif times >= 5 :
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain(" 晚安,快去睡觉！"),
+                        ]))
+                    elif times >= 5 and times <= 12:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain(" 都已经早上了..."),
+                        ]))
+                    else:
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            At(member.id),Plain(" 晚安~"),
+                            ]))
+                elif message.asDisplay().find("memes") != -1 or message.asDisplay().find("梗图") != -1:
+                    memelist = glob.glob("./source/memes/*")
+                    await app.sendGroupMessage(group, MessageChain.create([    
+                        Image.fromLocalFile(random.choice(memelist))
+                    ]))
+                elif message.asDisplay()== "摸肚子":
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("肚子不能摸啦...")
+                    ]))
+                elif message.asDisplay().startswith("摸屁股"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain("hentai!(拍开)")
+                    ]))
+                elif message.asDisplay().startswith("冲还是不冲?"):
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain(random.choice(['冲!!!', '不冲,注意身体(鲨鲨笑)']))
+                    ]))
+                ###小游戏###
+                if vari.mode == 1:
+                    try:
+                        msg = int(message.asDisplay())
+                        if member.id == vari.memberid and 1 <= msg <= 100 and vari.i != 5 and msg != vari.num:
+                            vari.i += 1
+                            if msg < vari.num:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain('你输入的数字太小了，还有' + str(vari.guess_chances - vari.i)+'次机会，请重新输入：')
+                                ]))
+                            elif msg > vari.num:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain('你输入的数字太大了，还有' + str(vari.guess_chances - vari.i)+'次机会，请重新输入：')
+                                ]))
+                        elif msg == vari.num and member.id == vari.memberid and vari.i <= 5:
+                            if checkdb(member.id, qqbot_item[6]) != 1:
+                                relation = checkdb(member.id,qqbot_item[1])
+                                updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
+                                updatedb(member.id, qqbot_item[6], 1)
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain('猜对了!\n'),Plain('好感度+{}'.format(10*(vari.guess_chances - vari.i -1)+10))
+                                ]))
+                                vari.mode = 0
+                                vari.memberid = 0
+                                vari.i = 0
+                                vari.guess_chances = 6
+                                vari.num = 0
+                            else:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain('猜对了!')
+                                ]))
+                                vari.mode = 0
+                                vari.memberid = 0
+                                vari.i = 0
+                                vari.guess_chances = 6
+                                vari.num = 0
+                        elif member.id == vari.memberid and vari.i == 5 and msg != vari.num:
+                            await app.sendGroupMessage(group, MessageChain.create([
+                                Plain('你没猜到...看来得多练习呢!\n'),Plain("数字是:{}".format(vari.num))
+                            ]))
+                            vari.mode = 0
+                            vari.memberid = 0
+                            vari.i = 0
+                            vari.guess_chances = 6
+                            vari.num = 0
+                        
+                    except Exception as e:
+                        pass
+                else:
                     pass
-            else:
-                pass
-
 ###开始运行###
 if __name__ == "__main__":
     app.launch_blocking()
