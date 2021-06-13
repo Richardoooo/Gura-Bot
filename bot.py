@@ -236,12 +236,7 @@ async def group_message_handler(
             if vari.mode == 0:
                 vari.mode = 1
                 vari.memberid = member.id
-                num_list = [1,2,3,4,5,6,7,8,9]
-                vari.num = ""
-                for i in range(4):
-                    ranint = str(random.choice(num_list))
-                    vari.num += ranint
-                    num_list.remove(int(ranint))
+                vari.num = gbl.generate.generate()
                 vari.guess_chances = 6
 
             #######
@@ -259,14 +254,9 @@ async def group_message_handler(
             if vari.mode == 0:
                 vari.mode = 2
                 vari.memberid = member.id
-                vari.num = ""
+                vari.num = gbl.generate.generate()
                 num_list = [1,2,3,4,5,6,7,8,9]
                 show_num = ""
-                for i in range(4):
-                    ranint = str(random.choice(num_list))
-                    vari.num += ranint
-                    num_list.remove(int(ranint))
-                num_list = [1,2,3,4,5,6,7,8,9]
                 print(vari.num)
             #######
                 await app.sendGroupMessage(group, MessageChain.create([
@@ -784,9 +774,9 @@ async def group_message_handler(
                         if vari.memberid == member.id:
                             msg = int(message.asDisplay())
                             if 1000 <= msg <= 9999 and vari.i != 6:
-                                print("aaaaa")
                                 vari.i += 1
-                                if gbl.guess.number_guess(msg,int(vari.num)) == "AAAA":
+                                list_1 = "".join([str(i) for i in vari.num])
+                                if gbl.guess.number_guess(msg,int(list_1)) == "AAAA":
                                     if gbl.sql.checkdb(member.id, qqbot_item[6]) != 1:
                                         relation = gbl.sql.checkdb(member.id,qqbot_item[1])
                                         gbl.sql.updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
@@ -805,7 +795,7 @@ async def group_message_handler(
                                     vari.num = ""
                                 else:
                                     await app.sendGroupMessage(group, MessageChain.create([
-                                        Plain("没猜对，目前进度:\n"+gbl.guess.number_guess(msg,int(vari.num))+"\n还剩{}次机会".format(vari.guess_chances-vari.i))
+                                        Plain("没猜对，目前进度:\n"+gbl.guess.number_guess(msg,int(list_1))+"\n还剩{}次机会".format(vari.guess_chances-vari.i))
                                     ]))
                             elif member.id == vari.memberid and vari.i == 6 and msg != vari.num:
                                 await app.sendGroupMessage(group, MessageChain.create([
@@ -821,9 +811,19 @@ async def group_message_handler(
                 elif vari.mode == 2:
                     try: 
                         if vari.memberid == member.id:
-                            eval(message.asDisplay())
-                            msg = str(message.asDisplay())
-                            if gbl.point.point(msg,[int(x) for x in str(vari.num)]) == True:
+                            useless_symbol = ["（","）"," "]
+                            useful_symbol = ["(",")",""]
+                            expression = message.asDisplay()
+                            for i in range(len(useless_symbol)):
+                                try:
+                                    expression.replace(useless_symbol[i],useful_symbol[i])
+                                except Exception as e:
+                                    pass
+                            eval(expression)
+                            print(expression)
+                            msg = str(expression)
+                            print("here")
+                            if gbl.point.point(msg,vari.num) == True:
                                 if gbl.sql.checkdb(member.id, qqbot_item[6]) != 1:
                                     relation = gbl.sql.checkdb(member.id,qqbot_item[1])
                                     gbl.sql.updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
@@ -839,20 +839,24 @@ async def group_message_handler(
                                     ]))
                                     vari.mode = 0
                                     vari.memberid = 0
-                            elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == False:
+                            elif gbl.point.point(msg,vari.num) == False:
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     At(member.id),Plain("没猜对，再试试!")
                                 ]))
-                            elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == "IncorrectNumber":
+                            elif gbl.point.point(msg,vari.num) == "IncorrectNumber":
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     At(member.id),Plain("请使用给出的数字！")
                                 ]))
-                            elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == "RepeatNumber":
+                            elif gbl.point.point(msg,vari.num) == "RepeatNumber":
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     At(member.id),Plain("你使用的数字不正确！")
                                 ]))
-                    except Exception as e:
-                        print(e)
+                            # elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == "IncorrectSymbol":
+                            #     await app.sendGroupMessage(group, MessageChain.create([
+                            #         At(member.id),Plain("你使用的字符不正确！")
+                            #     ]))
+                    except:
+                        pass
 ###开始运行###
 if __name__ == "__main__":
     app.launch_blocking()

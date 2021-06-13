@@ -3,7 +3,8 @@
 def point(expression,original_number):
 	print(str(expression),"   ",original_number)
 	full_num_list = [1,2,3,4,5,6,7,8,9]
-	list_without_original_number = [i for i in full_num_list if i not in original_number]
+	list_without_original_number = list(set(full_num_list)-set(original_number))
+	print(list_without_original_number)
 	for i in list_without_original_number:
 		if str(i) in str(expression):
 			print("??")
