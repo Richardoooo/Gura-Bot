@@ -237,6 +237,7 @@ async def group_message_handler(
                 vari.mode = 1
                 vari.memberid = member.id
                 num_list = [1,2,3,4,5,6,7,8,9]
+                vari.num = ""
                 for i in range(4):
                     ranint = str(random.choice(num_list))
                     vari.num += ranint
@@ -782,7 +783,7 @@ async def group_message_handler(
                     try:
                         if vari.memberid == member.id:
                             msg = int(message.asDisplay())
-                            if 1000 <= msg <= 9999 and vari.i != 10:
+                            if 1000 <= msg <= 9999 and vari.i != 6:
                                 print("aaaaa")
                                 vari.i += 1
                                 if gbl.guess.number_guess(msg,int(vari.num)) == "AAAA":
@@ -806,7 +807,7 @@ async def group_message_handler(
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("没猜对，目前进度:\n"+gbl.guess.number_guess(msg,int(vari.num))+"\n还剩{}次机会".format(vari.guess_chances-vari.i))
                                     ]))
-                            elif member.id == vari.memberid and vari.i == 10 and msg != vari.num:
+                            elif member.id == vari.memberid and vari.i == 6 and msg != vari.num:
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain('你没猜到...看来得多练习呢!\n'),Plain("数字是:{}".format(vari.num))
                                 ]))
