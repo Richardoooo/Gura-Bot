@@ -1,7 +1,7 @@
 ###库###
 
 import json
-from sql import updatedb,checkdb,reset
+import GuraBotLib as gbl
 import pymysql
 import time
 import random
@@ -20,6 +20,7 @@ from graia.application.message.elements.internal import *
 
 ###变量####
 
+
 os.chdir("/Users/richard/")
 npr.random.seed(0)
 p = npr.array([0.1,0.2, 0.4, 0.15, 0.1, 0.05])
@@ -31,7 +32,7 @@ class variables:
     memberid = 0
     i = 0
     guess_chances = 6
-    num = 0
+    num = ""
 vari = variables()
 ####参数####
 loop = asyncio.get_event_loop()
@@ -86,7 +87,7 @@ async def group_message_handler(
 
     ###指令###
 
-    if message.asDisplay().startswith("!") and member.id not in blacklist:
+    if message.asDisplay().startswith("!") or message.asDisplay().startswith("！") and member.id not in blacklist:
         if message.asDisplay().startswith("!掷骰子") or message.asDisplay().startswith("！掷骰子"):
             try:
                 dice = message.asDisplay().split(" ",3)
@@ -169,17 +170,17 @@ async def group_message_handler(
         #             Plain('抽奖次数不能小于或等于0!')
         #         ]))
         #     else:
-        #         relation = checkdb(member.id,qqbot_item[1])
+        #         relation = gbl.sql.checkdb(member.id,qqbot_item[1])
         #         if times * 100 > relation :
         #             await app.sendGroupMessage(group, MessageChain.create([
         #             Plain('最多抽奖次数不能大于你现在的好感度!')
         #             ]))
         #         else:
-        #             relation = checkdb(member.id,qqbot_item[1])
+        #             relation = gbl.sql.checkdb(member.id,qqbot_item[1])
         #             time.sleep(0.3)
         #             for i in range(times):
         #                 final_point += npr.random.choice(lottery,p=p.ravel())
-        #             updatedb(member.id, qqbot_item[1],relation+final_point-times*100)
+        #             gbl.sql.updatedb(member.id, qqbot_item[1],relation+final_point-times*100)
         #             await app.sendGroupMessage(group, MessageChain.create([
         #             Plain('抽奖完毕，一共抽了{}次，加了{}好感度,扣除{}好感度'.format(times,final_point,times*100))
         #             ]))
@@ -189,7 +190,7 @@ async def group_message_handler(
                     Plain('目前没有游戏开始,输入"猜数字"开始游戏~')
                 ]))
             else:
-                admin = checkdb(member.id, qqbot_item[4])
+                admin = gbl.sql.checkdb(member.id, qqbot_item[4])
                 if admin == 1:
                     vari.mode = 0
                     vari.memberid = 0
@@ -230,13 +231,51 @@ async def group_message_handler(
                 Plain("12.!图片 上传 [类别] 图片 / !图片 展示 [类别]")
             ]))
         elif message.asDisplay().startswith("!猜数字") or message.asDisplay().startswith("！猜数字"):
+            ###猜数字初始化###
+
             if vari.mode == 0:
                 vari.mode = 1
                 vari.memberid = member.id
-                vari.num = random.randint(1,100)
+                num_list = [1,2,3,4,5,6,7,8,9]
+                for i in range(4):
+                    ranint = str(random.choice(num_list))
+                    vari.num += ranint
+                    num_list.remove(int(ranint))
                 vari.guess_chances = 6
+
+            #######
                 await app.sendGroupMessage(group, MessageChain.create([
-                    Plain('你只有6次猜数字的机会Nya！(1-100)\n'),Plain("输入!quit退出")
+                    Plain('规则:一个四位数，每个数字各不相同（没有0），你需要猜各个位的数字，\n输出A则为当前位数的数字和位置与答案相同；\nB则是当前位数数字在答案内，但位置不相同；\nC则为当前位数数字不在答案内\n'),Plain("输入!quit退出")
+                ]))
+            elif vari.memberid != member.id and vari.memberid != 0:
+                await app.sendGroupMessage(group, MessageChain.create([
+                    Plain('别人在玩呢，先等等...')
+                ]))
+            else:
+                pass
+        elif message.asDisplay().startswith("!24点") or message.asDisplay().startswith("！24点"):
+            ####初始化24点####
+            if vari.mode == 0:
+                vari.mode = 2
+                vari.memberid = member.id
+                vari.num = ""
+                num_list = [1,2,3,4,5,6,7,8,9]
+                show_num = ""
+                for i in range(4):
+                    ranint = str(random.choice(num_list))
+                    vari.num += ranint
+                    num_list.remove(int(ranint))
+                num_list = [1,2,3,4,5,6,7,8,9]
+                print(vari.num)
+            #######
+                await app.sendGroupMessage(group, MessageChain.create([
+                    Plain('规则:生成4个数，每个数字各不相同（没有0），\n通过加("+")减("-")乘("*")除("/")和括号(必须为英文)来算出24,每个数字只能使用一次(注:不要空格).')
+                ]))
+                for i in [int(x) for x in vari.num]:
+                    show_num += str(i) + " "
+                time.sleep(0.5)
+                await app.sendGroupMessage(group, MessageChain.create([
+                    Plain("现在的数字为：{}".format(show_num))
                 ]))
             elif vari.memberid != member.id and vari.memberid != 0:
                 await app.sendGroupMessage(group, MessageChain.create([
@@ -246,22 +285,22 @@ async def group_message_handler(
                 pass
         elif message.asDisplay().startswith("!好感度"):
 
-            admin = checkdb(member.id, qqbot_item[4])
+            admin = gbl.sql.checkdb(member.id, qqbot_item[4])
             if admin == 1:
                 command = message.asDisplay().split(" ")
                 if command[1] == "查询":
                     await app.sendGroupMessage(group, MessageChain.create([
-                        Plain("用户{}的好感度为: {} ".format(command[2],checkdb(int(command[2]),qqbot_item[1])))
+                        Plain("用户{}的好感度为: {} ".format(command[2],gbl.sql.checkdb(int(command[2]),qqbot_item[1])))
                     ]))
                 elif command[1] == "增加":
-                    relation = int(checkdb(command[2],qqbot_item[1]))
-                    updatedb(command[2],qqbot_item[1],relation + int(command[3]))
+                    relation = int(gbl.sql.checkdb(command[2],qqbot_item[1]))
+                    gbl.sql.updatedb(command[2],qqbot_item[1],relation + int(command[3]))
                     await app.sendGroupMessage(group, MessageChain.create([
                         Plain("已为用户{}增加{}好感度".format(command[2],command[3]))
                         ]))
                 elif command[1] == '减少':
-                    relation = int(checkdb(command[2],qqbot_item[1]))
-                    updatedb(command[2],qqbot_item[1],relation - int(command[3]))
+                    relation = int(gbl.sql.checkdb(command[2],qqbot_item[1]))
+                    gbl.sql.updatedb(command[2],qqbot_item[1],relation - int(command[3]))
                     await app.sendGroupMessage(group, MessageChain.create([
                         Plain("已为用户{}减少{}好感度".format(command[2],command[3]))
                         ]))
@@ -274,7 +313,7 @@ async def group_message_handler(
                         Plain("权限不足!")
                         ]))
         elif message.asDisplay().startswith("!拉黑"):
-            admin = checkdb(member.id, qqbot_item[4])
+            admin = gbl.sql.checkdb(member.id, qqbot_item[4])
             if admin == 1:
                 blist = message.asDisplay().split(" ")
                 with open("/Users/richard/blacklist.json","r") as f:
@@ -286,7 +325,7 @@ async def group_message_handler(
                     At(blist[1]),Plain(' 不理你了!')
                 ]))
         elif message.asDisplay().startswith("!禁言"):
-            admin = checkdb(member.id, qqbot_item[4])
+            admin = gbl.sql.checkdb(member.id, qqbot_item[4])
             if admin == 1:
                 black = message.asDisplay().split(" ")
                 await app.mute(group,int(black[1]),int(black[2]))
@@ -323,8 +362,8 @@ async def group_message_handler(
                         Plain("草"*grass_time)
                         ]))
                 elif message.asDisplay().find("😅") != -1:
-                    relation = checkdb(member.id,qqbot_item[1])
-                    updatedb(member.id, qqbot_item[1],relation-5)
+                    relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                    gbl.sql.updatedb(member.id, qqbot_item[1],relation-5)
                     await app.sendGroupMessage(group, MessageChain.create([
                         At(member.id),Plain("不要发流汗黄豆啊....\n"),Plain("好感度-5"),
                     ]))
@@ -399,12 +438,12 @@ async def group_message_handler(
                     ]))
                 elif message.asDisplay().startswith('我永远单推'):
                     if message.asDisplay().startswith('我永远单推鲨鲨') or message.asDisplay().startswith('我永远单推古拉') or message.asDisplay().startswith('我永远单推高古拉'):
-                        relation = checkdb(member.id,qqbot_item[1])
-                        count = checkdb(member.id, qqbot_item[3])
+                        relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                        count = gbl.sql.checkdb(member.id, qqbot_item[3])
                         if member.id == 2365895696:
-                            if checkdb(member.id, qqbot_item[3]) == 0:
-                                updatedb(member.id, qqbot_item[1],relation+10)
-                                updatedb(member.id, qqbot_item[3], 1)
+                            if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0:
+                                gbl.sql.updatedb(member.id, qqbot_item[1],relation+10)
+                                gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("主人最棒了~\n"),Plain("好感度+10")
                                 ]))
@@ -416,9 +455,9 @@ async def group_message_handler(
                                 pass
                         else:
                             if 500 >= relation >= 100:
-                                if checkdb(member.id, qqbot_item[3]) == 0 :
-                                    updatedb(member.id, qqbot_item[1],relation+5)
-                                    updatedb(member.id, qqbot_item[3], 1)
+                                if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0 :
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],relation+5)
+                                    gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("好耶~！\n"),Plain("好感度+5")
                                     ]))
@@ -429,9 +468,9 @@ async def group_message_handler(
                                     ]))
                                     pass
                             elif 1000 >= relation >= 500:
-                                if checkdb(member.id, qqbot_item[3]) == 0:
-                                    updatedb(member.id, qqbot_item[1],relation+6)
-                                    updatedb(member.id, qqbot_item[3], 1)
+                                if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0:
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],relation+6)
+                                    gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("\n"),Plain("好感度+6")
                                     ]))
@@ -441,9 +480,9 @@ async def group_message_handler(
                                         Plain("谢谢~")
                                     ]))
                             elif 100 >= relation >= 0:
-                                if checkdb(member.id, qqbot_item[3]) == 0:
-                                    updatedb(member.id, qqbot_item[1],relation+2)
-                                    updatedb(member.id, qqbot_item[3], 1)
+                                if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0:
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],relation+2)
+                                    gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("嗯，我相信你哦\n"),Plain("好感度+2")
                                     ]))
@@ -454,9 +493,9 @@ async def group_message_handler(
                                     ]))
                                     pass
                             elif relation >= 2000:
-                                if checkdb(member.id, qqbot_item[3]) == 0:
-                                    updatedb(member.id, qqbot_item[1],relation+10)
-                                    updatedb(member.id, qqbot_item[3], 1)
+                                if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0:
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],relation+10)
+                                    gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("啾~\n"),Plain('好感度+10')
                                     ]))
@@ -467,9 +506,9 @@ async def group_message_handler(
                                     ]))
                                     pass
                             elif 4000 >= relation >= 1000:
-                                if checkdb(member.id, qqbot_item[3]) == 0:
-                                    updatedb(member.id, qqbot_item[1],relation+8)
-                                    updatedb(member.id, qqbot_item[3], 1)
+                                if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0:
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],relation+8)
+                                    gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("我爱你~\n"),Plain("好感度+8")
                                     ]))
@@ -480,9 +519,9 @@ async def group_message_handler(
                                     ]))
                                     pass
                             elif relation > 4000:
-                                if checkdb(member.id, qqbot_item[3]) == 0:
-                                    updatedb(member.id, qqbot_item[1],relation+10)
-                                    updatedb(member.id, qqbot_item[3], 1)
+                                if gbl.sql.checkdb(member.id, qqbot_item[3]) == 0:
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],relation+10)
+                                    gbl.sql.updatedb(member.id, qqbot_item[3], 1)
                                     await app.sendGroupMessage(group, MessageChain.create([
                                         Plain("你最棒了!\n"),Plain("好感度+10")
                                     ]))
@@ -520,12 +559,12 @@ async def group_message_handler(
                         Plain('O-oooooooooo AAAAE-A-A-I-A-U- JO-oooooooooooo AAE-O-A-A-U-U-A- E-eee')
                     ]))
                 elif message.asDisplay().startswith("摸尾巴"):
-                    relation = checkdb(member.id,qqbot_item[1])
-                    count = checkdb(member.id, qqbot_item[2])
+                    relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                    count = gbl.sql.checkdb(member.id, qqbot_item[2])
                     if member.id == 2365895696:
-                        if checkdb(member.id,qqbot_item[2]) < 7:
-                            updatedb(member.id, qqbot_item[1],relation+10)
-                            updatedb(member.id, qqbot_item[2], count + 1)
+                        if gbl.sql.checkdb(member.id,qqbot_item[2]) < 7:
+                            gbl.sql.updatedb(member.id, qqbot_item[1],relation+10)
+                            gbl.sql.updatedb(member.id, qqbot_item[2], count + 1)
                             await app.sendGroupMessage(group, MessageChain.create([
                                 Plain("主人轻点~\n"),Plain("好感度+10")
                             ]))
@@ -538,8 +577,8 @@ async def group_message_handler(
                     else:
                         if 400 >= relation > 100:
                             if count < 7:
-                                updatedb(member.id, qqbot_item[1],relation+3)
-                                updatedb(member.id, qqbot_item[2], count+1)
+                                gbl.sql.updatedb(member.id, qqbot_item[1],relation+3)
+                                gbl.sql.updatedb(member.id, qqbot_item[2], count+1)
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("只能摸一下哦...\n"),Plain("好感度+3")
                                 ]))
@@ -551,8 +590,8 @@ async def group_message_handler(
                                 pass
                         elif 100 >= relation >= 0:
                             if count < 7:
-                                updatedb(member.id, qqbot_item[1],relation+1)
-                                updatedb(member.id, qqbot_item[2], count+1)
+                                gbl.sql.updatedb(member.id, qqbot_item[1],relation+1)
+                                gbl.sql.updatedb(member.id, qqbot_item[2], count+1)
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("鲨鲨躲开了\n"),Plain("但好感度+1")
                                 ]))
@@ -564,8 +603,8 @@ async def group_message_handler(
                                 pass
                         elif 1000 >= relation > 400:
                             if count < 7:
-                                updatedb(member.id, qqbot_item[1],relation+4)
-                                updatedb(member.id, qqbot_item[2], count+1)
+                                gbl.sql.updatedb(member.id, qqbot_item[1],relation+4)
+                                gbl.sql.updatedb(member.id, qqbot_item[2], count+1)
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("别摸啦，好痒的~\n"),Plain('好感度+4')
                                 ]))
@@ -577,8 +616,8 @@ async def group_message_handler(
                                 pass
                         elif 4000 >= relation > 1000:
                             if count < 7:
-                                updatedb(member.id, qqbot_item[1],relation+10)
-                                updatedb(member.id, qqbot_item[2], count+1)
+                                gbl.sql.updatedb(member.id, qqbot_item[1],relation+10)
+                                gbl.sql.updatedb(member.id, qqbot_item[2], count+1)
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("啊~好舒服~\n"),Plain('好感度+10')
                                 ]))
@@ -590,8 +629,8 @@ async def group_message_handler(
                                 pass
                         elif relation > 4000:
                             if count < 7:
-                                updatedb(member.id, qqbot_item[1],relation+15)
-                                updatedb(member.id, qqbot_item[2], count+1)
+                                gbl.sql.updatedb(member.id, qqbot_item[1],relation+15)
+                                gbl.sql.updatedb(member.id, qqbot_item[2], count+1)
                                 await app.sendGroupMessage(group, MessageChain.create([
                                     Plain("再来一下...(脸红)\n"),Plain('好感度+10')
                                 ]))
@@ -606,7 +645,7 @@ async def group_message_handler(
                         Plain("*你摸了摸鲨鲨的头发，软软的，还有股香味(海草味?)\n"),Plain("好舒服...")
                     ]))
                 elif message.asDisplay()== "好感度":
-                    relation = checkdb(member.id,qqbot_item[1])
+                    relation = gbl.sql.checkdb(member.id,qqbot_item[1])
                     if 100 >= relation >= 0 :
                         await app.sendGroupMessage(group, MessageChain.create([
                                 Plain("鲨鲨觉得你是个陌生人\n"),Plain("当前好感度:{}".format(relation))
@@ -628,7 +667,7 @@ async def group_message_handler(
                                 Plain("鲨鲨看你的眼神充满爱意\n"),Plain("当前好感度:{}".format(relation))
                         ]))
                 elif message.asDisplay().startswith("摸耳朵"):
-                    relation = checkdb(member.id,qqbot_item[1])
+                    relation = gbl.sql.checkdb(member.id,qqbot_item[1])
                     if 100 >= relation >= 0 :
                         await app.sendGroupMessage(group, MessageChain.create([
                             Plain("耳朵不要乱摸啦！")
@@ -650,17 +689,17 @@ async def group_message_handler(
                             Plain("Nya~啊呜..饶了我吧..耳朵一直摸下去会很敏感的..")
                         ]))
                 elif message.asDisplay().startswith('sudo shark-reset'):
-                    admin = checkdb(member.id, qqbot_item[4])
+                    admin = gbl.sql.checkdb(member.id, qqbot_item[4])
                     if admin == 1:
                         await app.sendGroupMessage(group, MessageChain.create([
-                            Plain(reset())
+                            Plain(gbl.sql.reset())
                         ]))
                     else:
                         await app.sendGroupMessage(group, MessageChain.create([
                             Plain("权限不足")
                         ]))
                 elif message.asDisplay() == 'sudo mysql --all':
-                    admin = checkdb(member.id, qqbot_item[4])
+                    admin = gbl.sql.checkdb(member.id, qqbot_item[4])
                     if admin == 1:
                         conn = pymysql.connect(host='localhost',user='root',password='richard5296867',db="qqmember",charset='utf8mb4')
                         cur = conn.cursor()
@@ -682,12 +721,12 @@ async def group_message_handler(
                         At(member.id),Plain("Nyaaaaaaa!")
                     ]))
                 elif message.asDisplay().startswith('签到'):
-                    relation = checkdb(member.id,qqbot_item[1])
-                    sign_in_times = checkdb(member.id,qqbot_item[5])
+                    relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                    sign_in_times = gbl.sql.checkdb(member.id,qqbot_item[5])
                     if sign_in_times == 0:
                         point = random.randint(1,10)
-                        updatedb(member.id,qqbot_item[1],relation+point)
-                        updatedb(member.id,qqbot_item[5],1)
+                        gbl.sql.updatedb(member.id,qqbot_item[1],relation+point)
+                        gbl.sql.updatedb(member.id,qqbot_item[5],1)
                         await app.sendGroupMessage(group, MessageChain.create([
                             Plain("签到成功！\n"),Plain('好感度+{}'.format(point))
                         ]))
@@ -741,53 +780,78 @@ async def group_message_handler(
                 ###小游戏###
                 if vari.mode == 1:
                     try:
-                        msg = int(message.asDisplay())
-                        if member.id == vari.memberid and 1 <= msg <= 100 and vari.i != 5 and msg != vari.num:
-                            vari.i += 1
-                            if msg < vari.num:
+                        if vari.memberid == member.id:
+                            msg = int(message.asDisplay())
+                            if 1000 <= msg <= 9999 and vari.i != 10:
+                                print("aaaaa")
+                                vari.i += 1
+                                if gbl.guess.number_guess(msg,int(vari.num)) == "AAAA":
+                                    if gbl.sql.checkdb(member.id, qqbot_item[6]) != 1:
+                                        relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                                        gbl.sql.updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
+                                        gbl.sql.updatedb(member.id, qqbot_item[6], 1)
+                                        await app.sendGroupMessage(group, MessageChain.create([
+                                            Plain('猜对了!\n'),Plain('好感度+{}'.format(10*(vari.guess_chances - vari.i -1)+10))
+                                        ]))  
+                                    else:
+                                        await app.sendGroupMessage(group, MessageChain.create([
+                                            Plain('猜对了!')
+                                        ]))
+                                    vari.mode = 0
+                                    vari.memberid = 0
+                                    vari.i = 0
+                                    vari.guess_chances = 6
+                                    vari.num = ""
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain("没猜对，目前进度:\n"+gbl.guess.number_guess(msg,int(vari.num))+"\n还剩{}次机会".format(vari.guess_chances-vari.i))
+                                    ]))
+                            elif member.id == vari.memberid and vari.i == 10 and msg != vari.num:
                                 await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain('你输入的数字太小了，还有' + str(vari.guess_chances - vari.i)+'次机会，请重新输入：')
-                                ]))
-                            elif msg > vari.num:
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain('你输入的数字太大了，还有' + str(vari.guess_chances - vari.i)+'次机会，请重新输入：')
-                                ]))
-                        elif msg == vari.num and member.id == vari.memberid and vari.i <= 5:
-                            if checkdb(member.id, qqbot_item[6]) != 1:
-                                relation = checkdb(member.id,qqbot_item[1])
-                                updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
-                                updatedb(member.id, qqbot_item[6], 1)
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain('猜对了!\n'),Plain('好感度+{}'.format(10*(vari.guess_chances - vari.i -1)+10))
+                                    Plain('你没猜到...看来得多练习呢!\n'),Plain("数字是:{}".format(vari.num))
                                 ]))
                                 vari.mode = 0
                                 vari.memberid = 0
                                 vari.i = 0
                                 vari.guess_chances = 6
-                                vari.num = 0
-                            else:
-                                await app.sendGroupMessage(group, MessageChain.create([
-                                    Plain('猜对了!')
-                                ]))
-                                vari.mode = 0
-                                vari.memberid = 0
-                                vari.i = 0
-                                vari.guess_chances = 6
-                                vari.num = 0
-                        elif member.id == vari.memberid and vari.i == 5 and msg != vari.num:
-                            await app.sendGroupMessage(group, MessageChain.create([
-                                Plain('你没猜到...看来得多练习呢!\n'),Plain("数字是:{}".format(vari.num))
-                            ]))
-                            vari.mode = 0
-                            vari.memberid = 0
-                            vari.i = 0
-                            vari.guess_chances = 6
-                            vari.num = 0
-                        
+                                vari.num = ""
                     except Exception as e:
-                        pass
-                else:
-                    pass
+                        print(e)
+                elif vari.mode == 2:
+                    try: 
+                        if vari.memberid == member.id:
+                            eval(message.asDisplay())
+                            msg = str(message.asDisplay())
+                            if gbl.point.point(msg,[int(x) for x in str(vari.num)]) == True:
+                                if gbl.sql.checkdb(member.id, qqbot_item[6]) != 1:
+                                    relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                                    gbl.sql.updatedb(member.id, qqbot_item[1],(10*(vari.guess_chances - vari.i -1)+10)+relation)
+                                    gbl.sql.updatedb(member.id, qqbot_item[6], 1)
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain('答对了!\n'),Plain('好感度+{}'.format(10*(vari.guess_chances - vari.i -1)+10))
+                                    ]))
+                                    vari.mode = 0
+                                    vari.memberid = 0
+                                else:
+                                    await app.sendGroupMessage(group, MessageChain.create([
+                                        Plain('答对了!')
+                                    ]))
+                                    vari.mode = 0
+                                    vari.memberid = 0
+                            elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == False:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    At(member.id),Plain("没猜对，再试试!")
+                                ]))
+                            elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == "IncorrectNumber":
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    At(member.id),Plain("请使用给出的数字！")
+                                ]))
+                            elif gbl.point.point(msg,[int(x) for x in str(vari.num)]) == "RepeatNumber":
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    At(member.id),Plain("你使用的数字不正确！")
+                                ]))
+                    except Exception as e:
+                        print(e)
 ###开始运行###
 if __name__ == "__main__":
     app.launch_blocking()
