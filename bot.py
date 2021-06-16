@@ -17,16 +17,19 @@ import graia.scheduler as scheduler
 from graia.broadcast import Broadcast
 from graia.application.entry import *
 from graia.application.message.elements.internal import *
+from graia.broadcast.interrupt import InterruptControl
+from graia.broadcast.interrupt.waiter import Waiter
+from graia.application.event.messages import GroupMessage
 
-###变量####
+###初始化####
 
-
+members = ["🦈","🐙","🥜","🦃","👻"]
 os.chdir("/Users/richard/")
 npr.random.seed(0)
 p = npr.array([0.1,0.2, 0.4, 0.15, 0.1, 0.05])
 lottery = [0,50,100,150,200,250]
 group_black_list = [915889573,]
-qqbot_item = ['QQid', 'good' ,'times', 'pull', 'admin','sign_in','game_1']
+qqbot_item = ['QQid', 'good' ,'times', 'pull', 'admin','sign_in','game_1','stake']
 class variables:
     mode = 0
     memberid = 0
@@ -37,6 +40,7 @@ vari = variables()
 ####参数####
 loop = asyncio.get_event_loop()
 bcc = Broadcast(loop=loop)
+inc = InterruptControl(bcc)
 app = GraiaMiraiApplication(
     broadcast=bcc,
     connect_info=Session(
@@ -90,15 +94,74 @@ async def group_message_handler(
     if message.asDisplay().startswith("!") or message.asDisplay().startswith("！") and member.id not in blacklist:
         if message.asDisplay().startswith("!掷骰子") or message.asDisplay().startswith("！掷骰子"):
             try:
-                dice = message.asDisplay().split(" ",3)
+                dice = message.asDisplay().split(" ")
                 probability = random.randint(int(dice[2]),int(dice[3]))
-                await app.sendGroupMessage(group, MessageChain.create([
-                    Plain('你{}的概率是{}Nya!'.format(dice[1],probability))
-                    ]))
+                if dice[1].find("{r}") != -1:
+                    await app.sendGroupMessage(group,MessageChain.create([
+                        Plain(str(dice[1]).format(r=probability)+"Nya!")
+                        ]))
+                else:
+                    await app.sendGroupMessage(group, MessageChain.create([
+                        Plain('你{}的概率是{}Nya!'.format(dice[1],probability))
+                        ]))
             except:
                 await app.sendGroupMessage(group, MessageChain.create([
-                    At(member.id),Plain("无法识别!,用法为: !掷骰子 事件 概率(最少) 概率(最多) \n 如: !掷骰子 我是人 1 100")
+                    At(member.id),Plain("无法识别!,用法为: !掷骰子 事件 概率(下限) 概率(上限) \n 如: !掷骰子 我今年{r}岁! 1 100,\n上面这行输出为：我今年18岁!")
                     ]))
+        elif message.asDisplay().startswith("!开始赛v"):
+            if int(gbl.sql.checkdb(member.id,qqbot_item[7])) < 5:
+                await app.sendGroupMessage(group, MessageChain.create([
+                    At(member.id), Plain("[赛场情况]\n 1:++++++++++++++++{} \n 2:++++++++++++++++{} \n 3:++++++++++++++++{} \n 4:++++++++++++++++{} \n 5:++++++++++++++++{} \n============\n赛马即将开始,使用 !下注 [v号] [好感度] 如：!下注 1 100".format(members[0],members[1],members[2],members[3],members[4]))
+                ]))
+                @Waiter.create_using_function([GroupMessage])
+                async def waiter(
+                event: GroupMessage, waiter_group: Group,
+                waiter_member: Member, waiter_message: MessageChain
+                ):
+                    if all([waiter_group.id == group.id, waiter_member.id == member.id, waiter_message.asDisplay().startswith("!下注")]):
+                        bet = waiter_message.asDisplay().split(" ")
+                        await app.sendGroupMessage(group, MessageChain.create([
+                            Plain("成功花{}好感度押了{}号".format(bet[2],bet[1]))
+                        ]))
+                        ###初始化###
+                        num_of_time=0
+                        route = [0,0,0,0,0]
+                        is_decrease = True
+                        ###########
+                        while True:
+                            for i in range(5):
+                                route[i] += random.randint(1,5)
+                            num_of_time += 1
+                            if gbl.HorseRace.race(route)[1].count(True) != 0:
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain('[第{}轮]\n'.format(num_of_time)+gbl.HorseRace.race(route)[0]+"\n==========\n{}胜利！！！".format(members[int(gbl.HorseRace.race(route)[1].index(True))]))
+                                    ]))
+                                break
+                            await app.sendGroupMessage(group, MessageChain.create([
+                                Plain('[第{}轮]\n'.format(num_of_time)+gbl.HorseRace.race(route)[0]),
+                            ]))
+                            time.sleep(2)
+                        for i,element in enumerate(gbl.HorseRace.race(route)[1]):
+                            if element == True and i+1 == int(bet[1]):
+                                relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                                gbl.sql.updatedb(member.id,qqbot_item[1],relation+int(bet[2]))
+                                await app.sendGroupMessage(group, MessageChain.create([
+                                    Plain("已增加{}好感度！".format(bet[2])),
+                                ]))
+                                is_decrease = False
+                        if is_decrease:
+                            relation = gbl.sql.checkdb(member.id,qqbot_item[1])
+                            gbl.sql.updatedb(member.id,qqbot_item[1],relation-int(bet[2]))    
+                            await app.sendGroupMessage(group, MessageChain.create([
+                                Plain("已扣除{}好感度！".format(bet[2])),
+                            ]))    
+                        return event
+                await inc.wait(waiter)
+                gbl.sql.updatedb(member.id,qqbot_item[7],int(gbl.sql.checkdb(member.id,qqbot_item[7]))+1)
+            else:
+                await app.sendGroupMessage(group, MessageChain.create([
+                    Plain("今天的赛v次数已经到达上限了，不能再玩了！"),
+                ]))   
         elif message.asDisplay().startswith("!图片"):
             command = message.asDisplay().split(" ")
             if command[1] == "上传":
@@ -109,7 +172,6 @@ async def group_message_handler(
                             Plain('用法错误，正确用法为: !图片 上传 [类别] 图片 \n'),
                             Plain("如要展示图片，则为: !图片 展示 [类别] ，错误信息:{}".format(e))
                         ]))
-                    return False
                 try:
                     if command[3] == "":
                         pass
@@ -221,7 +283,10 @@ async def group_message_handler(
                 Plain("2.我永远单推鲨鲨(加好感度)\n"),
                 Plain("3.伸手指\n"),
                 Plain("4.签到(随机加好感度)\n"),
-                Plain("5.!猜数字(赢了加好感度)\n"),
+                Plain("5.小游戏(会加好感度)\n"),
+                Plain("     i.!24点\n"),
+                Plain("     ii.!猜数字\n"),
+                Plain("     iii.!开始赛v (就是赛马游戏)"),
                 Plain("6.色图\n"),
                 Plain("7.摸肚子/屁股\n"),
                 Plain("8.闹钟\n"),

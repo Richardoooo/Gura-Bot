@@ -51,7 +51,7 @@ def reset():
     conn = pymysql.connect(host='localhost',user='root',password='richard5296867',db="qqmember",charset='utf8mb4')
     try:
         cur = conn.cursor()
-        cur.execute('update qqbot set times = 0 ,pull = 0,sign_in = 0, game_1 = 0')
+        cur.execute('update qqbot set times = 0 ,pull = 0,sign_in = 0, game_1 = 0, stake = 0')
         conn.commit()
         return "重置好啦主人"
     except Exception as e:
