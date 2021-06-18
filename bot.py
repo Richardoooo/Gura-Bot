@@ -804,7 +804,7 @@ async def group_message_handler(
                         await app.sendGroupMessage(group, MessageChain.create([
                             At(member.id),Plain(" 才中午.."),
                             ]))
-                    elif times >= 5 :
+                    elif times < 5 :
                         await app.sendGroupMessage(group, MessageChain.create([
                             At(member.id),Plain(" 晚安,快去睡觉！"),
                         ]))
