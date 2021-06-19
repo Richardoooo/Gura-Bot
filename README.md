@@ -1,5 +1,6 @@
 # My-Mirai-QQbot
 ## my rubbish qqbot
+GaurGwra Youtube频道:[https://www.youtube.com/channel/UCoSrY_IQQVpmIRZ9Xf-y93g](https://www.youtube.com/channel/UCoSrY_IQQVpmIRZ9Xf-y93g)
 基于[Marai框架](https://github.com/mamoe/mirai)开发的qqbot.  
 目前的功能:
 1. 触发词
@@ -15,3 +16,4 @@
 7. 复读
 ## 给个STAR罢老爷们！！！ ##
 ## assets里有色图啊！！！！有色图！！！！！ ##
+#古拉一生推！##
